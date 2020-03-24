@@ -16,10 +16,9 @@
 package udacity.pokemon;
 
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.Toast;
@@ -29,8 +28,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -47,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         pokemonList = new ArrayList<>();
-        list_view = (ListView) findViewById(R.id.list);
+        list_view = findViewById(R.id.list);
 
         new GetPokemon().execute();
     }
@@ -57,30 +54,33 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... arg0) {
             HttpHandler sh = new HttpHandler();
-
             String url = "https://raw.githubusercontent.com/Biuni/PokemonGO-Pokedex/master/pokedex.json";
-
-
             String jsonString = "";
+
             try {
-                // TODO: make a request to the URL
+                // DONE: make a request to the URL
+                jsonString = sh.makeHttpRequest(url);
 
             } catch (IOException e) {
                 return null;
             }
 
-            Log.e(TAG, "Response from url: " + jsonString);
+            Log.e(TAG, "Response from Url: " + jsonString);
             if (jsonString != null) {
                 try {
-                    //TODO: Create a new JSONObject
+                    // DONE: Create a new JSONObject
+                    JSONObject root = new JSONObject(jsonString);
 
-                    // TODO: Get the JSON Array node and name it "pokemons"
-
+                    // DONE: Get the JSON Array node and name it "pokemons"
+                    JSONArray pokemons = root.getJSONArray("pokemon");
 
                     // looping through all Contacts
                     for (int i = 0; i < pokemons.length(); i++) {
-                        //TODO: get the JSONObject and its three attributes
-
+                        //DONE: get the JSONObject and its three attributes
+                        JSONObject jsonObject = pokemons.getJSONObject(i);
+                        String name = jsonObject.getString("name");
+                        String id = jsonObject.getString("id");
+                        String candy = jsonObject.getString("candy");
 
                         // tmp hash map for a single pokemon
                         HashMap<String, String> pokemon = new HashMap<>();
@@ -95,49 +95,31 @@ public class MainActivity extends AppCompatActivity {
                     }
                 } catch (final JSONException e) {
                     Log.e(TAG, "Json parsing error: " + e.getMessage());
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(getApplicationContext(),
-                                    "Json parsing error: " + e.getMessage(),
-                                    Toast.LENGTH_LONG).show();
-                        }
-                    });
-
+                    runOnUiThread(() -> Toast.makeText(getApplicationContext(),
+                            "Json parsing error: " + e.getMessage(),
+                            Toast.LENGTH_LONG).show());
                 }
 
             } else {
                 Log.e(TAG, "Couldn't get json from server.");
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(getApplicationContext(),
-                                "Couldn't get json from server.",
-                                Toast.LENGTH_LONG).show();
-                    }
-                });
+                runOnUiThread(() -> Toast.makeText(getApplicationContext(),
+                        "Couldn't get json from server.",
+                        Toast.LENGTH_LONG).show());
             }
 
             return null;
         }
 
-        private URL createUrl(String stringUrl) {
-            URL url = null;
-            try {
-                url = new URL(stringUrl);
-            } catch (MalformedURLException exception) {
-                return null;
-            }
-            return url;
-        }
-
         @Override
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
-            ListAdapter adapter = new SimpleAdapter(MainActivity.this, pokemonList,
-                    R.layout.list_item, new String[]{"name", "id", "candy"},
-                    new int[]{R.id.name, R.id.id, R.id.candy});
-            list_view.setAdapter(adapter);
+            list_view.setAdapter(new SimpleAdapter(
+                    MainActivity.this,
+                    pokemonList,
+                    R.layout.list_item,
+                    new String[]{"name", "id", "candy"},
+                    new int[]{R.id.name, R.id.id, R.id.candy}
+            ));
         }
     }
 }
